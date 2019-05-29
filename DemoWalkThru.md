@@ -1,10 +1,7 @@
-# Demo WalkThru
+## Demo WalkThru
 
-## Ansible Basic
-```  
-# ansible-basic.sh
-```
-* Run this script to walk thru a demonstration of the following features:
+### Ansible Basic
+* Run ```ansible-basic.sh``` script to walk thru a demonstration of the following features:
   * Basic Syntax
   * Installation
   * Inventory
@@ -21,18 +18,12 @@
 
 
 ## Ansible Advanced
-```
-# ansible-advanced.sh
-```
-* Run this script to walk thru a demonstration of the following features:
+* Run ```ansible-advanced.sh``` script to walk thru a demonstration of the following features:
   * Conditionals
   * Roles
   * Galaxy
 
 ## Ansible NonRoot
-```  
-#  ansible-nonroot.sh
-```
-* Run this script to walk thru a demonstration of running ansible as a non root user
+* Run ```ansible-nonroot.sh``` script to walk thru a demonstration of running ansible as a non root user
   * Very simple example
   * Assumes a local user = testuser, with sudo rights (i.e. member of wheel)
