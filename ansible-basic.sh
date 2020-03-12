@@ -18,6 +18,44 @@ ResetText='\033[0m'
 TextPurple='\033[0;35m'
 TextYellow='\033[1;33m'
 
+trap 'echo -e $ResetText; exit 0' 0 1 2 3 15
+
+# Setup
+# Make sure Ansible is installed
+rpm -q ansible || (yum install -y ansible || exit 1)
+# Create a working directory
+mdkir ~/myplaybooks
+# Populate working directory with playbooks
+curl -O https://raw.githubusercontent.com/marktonneson/ansible-playbooks/master/apache-basic-install-apache.yml ~/myplaybooks/
+curl -O https://raw.githubusercontent.com/marktonneson/ansible-playbooks/master/apache-basic-remove-apache.yml ~/myplaybooks/
+curl -O https://raw.githubusercontent.com/marktonneson/ansible-playbooks/master/apache-basic-playbook.yml ~/myplaybooks/
+curl -O https://raw.githubusercontent.com/marktonneson/ansible-playbooks/master/apache-basic-cleanup.yml ~/myplaybooks/
+# Create templates directory
+mdkir -p ~/myplaybooks/templates
+# Populate working directory with Templates
+echo << EOF > ~/myplaybooks/templates/index.html.j2
+<html>
+<head>
+  <title>Ansible: Automation for Everyone</title>
+<body>
+<p>This is the message from the playbook variable: {{ apache_test_message }}</p>
+<p>This is an ansible fact: {{ inventory_hostname }}</p>
+</body>
+</html>
+EOF
+curl -O https://raw.githubusercontent.com/ansible/lightbulb/master/examples/apache-role/roles/apache-simple/templates/httpd.conf.j2 ~/myplaybooks/template/
+
+# Create a hosts file for Inventory
+echo << EOF > /root/hosts
+[demo]
+ansible1
+ansible2
+EOF
+# Create a local ansible.cfg to use the inventory file
+echo << EOF > /root/ansible.cfg
+inventory = /root/hosts
+EOF
+
 clear
 echo -e $TextBlue "
 	Ansible Core Basics
@@ -39,11 +77,7 @@ echo -e $TextBlue "
 echo -e $TextGreen "
    First, how do you install Ansible?
 
-   1. Enable EPEL repository"
-echo -e $TextRed "
-	# yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm"
-echo -e $TextGreen "
-   2. Install ansible via yum"
+   Install ansible via yum"
 echo -e $TextRed "
 	# yum install ansible
 "
@@ -110,7 +144,7 @@ echo -e $TextLightGray && read -p "<-- Press any key to continue -->" NULL && ec
 
 echo -e $TextBlue "
 =========================================================================="  $ResetText
-echo -e $TextGreen "  
+echo -e $TextGreen "
    Where to go for more information:
 
 	http://docs.ansible.com
@@ -129,7 +163,7 @@ clear
 echo -e $TextBlue "
 	Ansible Command Line
 =========================================================================="  $ResetText
-echo -e $TextGreen "  
+echo -e $TextGreen "
    Let’s start with something really basic - pinging a host.
    The ping module makes sure our demo hosts are responsive."
 echo -e $TextRed "
@@ -141,7 +175,7 @@ ansible demo -m ping
 
 echo -e $TextBlue "
 =========================================================================="  $ResetText
-echo -e $TextGreen "  
+echo -e $TextGreen "
    Now let’s see how we can run a good ol' fashioned Linux command
    and format the output using the command module."
 echo -e $TextRed '
@@ -155,7 +189,7 @@ ansible demo -m command -a "uptime" -o
 
 echo -e $TextBlue "
 =========================================================================="  $ResetText
-echo -e $TextGreen "  
+echo -e $TextGreen "
    Take a look at a node’s configuration.
    The setup module displays ansible facts (and a lot of them)
    about an endpoint."
@@ -168,7 +202,7 @@ ansible ansible1 -m setup | less
 
 echo -e $TextBlue "
 =========================================================================="  $ResetText
-echo -e $TextGreen "  
+echo -e $TextGreen "
    Now, let’s install Apache using the yum module.
 
 	Note: this operation takes 1-2 minutes to complete.
@@ -182,7 +216,7 @@ ansible demo -m yum -a "name=httpd state=present" -b
 
 echo -e $TextBlue "
 =========================================================================="  $ResetText
-echo -e $TextGreen "  
+echo -e $TextGreen "
    It's important to note that Ansible is idempotent,
    meaning we can re-run the same command without consequence."
 echo -e $TextRed '
@@ -216,7 +250,7 @@ ansible demo -m service -a "name=httpd state=stopped" -b
 
 echo -e $TextBlue "
 =========================================================================="  $ResetText
-echo -e $TextGreen "  
+echo -e $TextGreen "
    Next, remove the Apache package."
 echo -e $TextRed '
 	# ansible demo -m yum -a "name=httpd state=absent" -b
@@ -275,15 +309,15 @@ echo -e $TextLightGray && read -p "<-- Press any key to continue -->" NULL && ec
 
 echo -e $TextBlue "
 =========================================================================="  $ResetText
-echo -e $TextGreen "  
+echo -e $TextGreen "
    We are now going to run you’re brand spankin' new playbook
    on your two web nodes. To do this, you are going to use the
    ansible-playbook command."
 echo -e $TextRed "
-	# ansible-playbook myplaybooks/install_apache.yml
+	# ansible-playbook ~/myplaybooks/apache-basic-install-apache.yml
 "
 echo -e $TextLightGray && read -p "<-- Press any key to run above command -->" NULL && echo -e $ResetText
-ansible-playbook myplaybooks/install_apache.yml
+ansible-playbook ~/myplaybooks/apache-basic-install-apache.yml
 echo -e $TextGreen "
    You'll notice that the output from running a playbook is much
    cleaner than running a single ansible command."
@@ -295,10 +329,10 @@ echo -e $TextGreen "
    Again remember that Ansible is idempotent,
    so we can re-run the same playbooks also"
 echo -e $TextRed "
-	# ansible-playbook myplaybooks/install_apache.yml
+	# ansible-playbook ~/myplaybooks/apache-basic-install-apache.yml
 "
 echo -e $TextLightGray && read -p "<-- Press any key to re-run above command -->" NULL && echo -e $ResetText
-ansible-playbook myplaybooks/install_apache.yml
+ansible-playbook ~/myplaybooks/apache-basic-install-apache.yml
 
 
 echo -e $TextBlue "
@@ -310,12 +344,12 @@ echo -e $TextGreen "
 	-i This option allows you to specify the inventory file you wish to use.
 	-v[v] This increases verbosity, either once or twice."
 echo -e $TextRed "
-	# ansible-playbook --private-key=~/.ssh/id_rsa -i ./hosts myplaybooks/remove_apache.yml
+	# ansible-playbook --private-key=~/.ssh/id_rsa -i ./hosts -vv ~/myplaybooks/apache-basic-remove-apache.yml
 "
-echo -e $TextReset && read -p "   Press any key to view remove_apache.yml" NULL && echo -e $ResetText
-less myplaybooks/remove_apache.yml
+echo -e $TextReset && read -p "   Press any key to view apache-basic-remove-apache.yml" NULL && echo -e $ResetText
+less ~/myplaybooks/apache-basic-remove-apache.yml
 echo -e $TextLightGray && read -p "<-- Press any key to run above command -->" NULL && echo -e $ResetText
-ansible-playbook --private-key=~/.ssh/id_rsa -i ./hosts -vv myplaybooks/remove_apache.yml
+ansible-playbook --private-key=~/.ssh/id_rsa -i ./hosts -vv ~/myplaybooks/apache-basic-remove-apache.yml
 
 # ==============================================================================
 #	Ansible Playbooks
@@ -339,7 +373,7 @@ echo -e $TextGreen '
       	      - httpd
 	      - mod_wsgi
 	    apache_test_message: This is a test message
-	    apache_max_keep_alive_requests: 115
+	    apache_webserver_port: 80
 	  tasks:
 	    - name: install httpd packages
 	      yum:
@@ -363,7 +397,7 @@ echo -e $TextLightGray && read -p "<-- Press any key to continue -->" NULL && ec
 
 echo -e $TextBlue "
 =========================================================================="  $ResetText
-echo -e $TextGreen "  
+echo -e $TextGreen "
 	Getting more Advanced: Templates and Jinja (huh?)
 
 	When you need to do pretty much anything with files and directories,
@@ -419,7 +453,7 @@ echo -e $TextGreen "
      Finally! The nofify statement is the invocation of a handler by name.
 "
 echo -e $TextLightGray && read -p "<-- Let's quickly look at our completed playbook ... -->" NULL && echo -e $ResetText
-less myplaybooks/apache-basic-playbook.yml
+less ~/myplaybooks/apache-basic-playbook.yml
 
 
 echo -e $TextBlue "
@@ -430,10 +464,10 @@ echo -e $TextGreen "
 	Note: this operation takes 2-3 minutes to complete.
 "
 echo -e $TextRed "
-	# ansible-playbook -v myplaybooks/apache-basic-playbook.yml
+	# ansible-playbook -v ~/myplaybooks/apache-basic-playbook.yml
 "
 echo -e $TextLightGray && read -p "<-- Press any key to run the above command. -->" NULL && echo -e $ResetText
-ansible-playbook -v myplaybooks/apache-basic-playbook.yml
+ansible-playbook -v ~/myplaybooks/apache-basic-playbook.yml
 
 
 echo -e $TextBlue "
@@ -442,10 +476,12 @@ echo -e $TextGreen "
    Before we go let's see the success of our playbook ...
 "
 echo -e $TextLightGray && read -p "<-- Press any key to open a browser -->" NULL && echo -e $ResetText
-firefox http://ansible1
+firefox http://ansible1 || curl http://ansible1
 
 echo -e $TextGreen "
    That's it!  Thanks for playing!"
 echo -e $TextLightGray && read -p "<-- Press any key to clean up the environment. -->" NULL && echo -e $ResetText
-ansible-playbook myplaybooks/cleanup.yml
-
+ansible-playbook ~/myplaybooks/apache-basic-cleanup.yml
+rm -rf ~/myplaybooks
+rm ~/hosts
+rm ~/ansible.cfg
