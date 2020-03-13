@@ -24,13 +24,13 @@
   * Assumes a /root/hosts file as the inventory, with the following:
     * A group named "demo"
     * Two hosts named ansible1 and ansible2
+    * Alter this script accordingly if you want different hosts or group
     * Example:
 ```
 [demo]
 ansbile1
 ansible2
 ```
-    * Alter this script accordingly if you want different hosts or group
 
 
 ## Ansible Advanced
