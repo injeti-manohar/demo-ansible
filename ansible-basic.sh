@@ -43,7 +43,9 @@ echo << EOF > ~/myplaybooks/templates/index.html.j2
 </body>
 </html>
 EOF
-curl -O https://raw.githubusercontent.com/ansible/lightbulb/master/examples/apache-role/roles/apache-simple/templates/httpd.conf.j2 ~/myplaybooks/template/
+cd ~/myplaybooks/template/
+curl -O https://raw.githubusercontent.com/ansible/lightbulb/master/examples/apache-role/roles/apache-simple/templates/httpd.conf.j2
+cd ~
 
 # Create a hosts file for Inventory
 echo << EOF > /root/hosts
