@@ -10,10 +10,30 @@ TextBlue='\033[0;34m' # Section header & dividers
 TextLightGray='\033[0;37m' # Pause & continue
 ResetText='\033[0m'
 
+trap 'echo -e $ResetText; exit 0' 0 1 2 3 15
+
+# Setup
+# Make sure Ansible is installed
+rpm -q ansible || (yum install -y ansible || exit 1)
+# Create a working directory
+mkdir ~/myplaybooks ; cd ~/myplaybooks
+curl -O https://raw.githubusercontent.com/marktonneson/ansible-playbooks/master/apache-basic-playbook.yml
+curl -O https://raw.githubusercontent.com/marktonneson/ansible-playbooks/master/apache-basic-cleanup.yml
+# Create a hosts file for Inventory
+cat << EOF > ~/myplaybooks/hosts
+[demo]
+ansible1
+ansible2
+EOF
+# Create a local ansible.cfg to use the inventory file
+cat << EOF > ~/ansible.cfg
+inventory = /root/myplaybooks/hosts
+EOF
+
 clear
 echo -e $TextBlue "
 	Ansible Core Advanced Topics
-==========================================================================" 
+=========================================================================="
 echo -e $TextGreen '
    Conditionals
 
@@ -53,28 +73,30 @@ echo -e $TextRed "
 	# ansible-playbook --tags=packages example.yml
 "
 echo -e $TextLightGray && read -p "<-- Press any key to continue -->" NULL && echo -e $ResetText
-          
+
 echo -e $TextBlue "
 	Ansible Roles and Ansible Galaxy
-==========================================================================" 
+=========================================================================="
 echo -e $TextGreen "
    Roles
 
    Roles are a package of closely related Ansible content that can be shared
    more easily than plays alone.
-	  * Improves readability and maintainability of complex plays
-	  * Eases sharing, reuse and standardization of automation processes
-	  * Enables Ansible content to exist independently of playbooks,
-		projects -- even organizations
-	  * Provides functional conveniences such as file path resolution and
-		default values
+     * Improves readability and maintainability of complex plays
+     * Eases sharing, reuse and standardization of automation processes
+     * Enables Ansible content to exist independently of playbooks,
+       projects -- even organizations
+     * Provides functional conveniences such as file path resolution and
+       default values
 "
+echo -e $TextLightGray && read -p "<-- Press any key to continue -->" NULL && echo -e $ResetText
+
 echo -e $TextBlue "
-==========================================================================" 
+=========================================================================="
 echo -e $TextGreen "
    Ansible Galaxy
 
-	http://galaxy.ansible.com
+	 http://galaxy.ansible.com
 
    Ansible Galaxy is a hub for finding, reusing and sharing Ansible content.
 
@@ -82,26 +104,30 @@ echo -e $TextGreen "
    and reviewed by the Ansible community.
 "
 echo -e $TextLightGray && read -p "Press any key to learn how Roles and Galaxy work together." NULL && echo -e $ResetText
-firefox https://galaxy.ansible.com
+firefox https://galaxy.ansible.com 2>/dev/null || (echo -e "It appears this system does not have a desktop environment installed.\nFeel free to explore http://galaxy.ansible.com on your own.\n")
+echo -e $TextLightGray && read -p "<-- Press any key to continue -->" NULL && echo -e $ResetText
 
 echo -e $TextBlue "
-==========================================================================" 
+=========================================================================="
 echo -e $TextGreen "
    Ansible Roles and Ansible Galaxy
 
-   While it is possible to write a playbook in one file as we’ve seen today,
+   While it is possible to write a playbook in one file as we’ve seen,
    eventually you’ll want to reuse files and start to organize things.
 
-   Ansible Roles is the way we do this. When you create a role, you deconstruct
-   your playbook into parts and those parts sit in a directory structure.
+   Ansible Roles is the way we do this. When you create a role, you
+   deconstruct your playbook into parts and those parts sit in a
+   directory structure.
 
-   For this exercise, you are going to take the apache-basic-playbook and
-   refactor it into a role. In addition, you’ll learn to use Ansible Galaxy.
+   For this exercise, you are going to take the apache-basic-playbook
+   and refactor it into a role. In addition, you’ll learn to use
+   Ansible Galaxy.
 
    Let’s begin with seeing how a playbook will break down into a role.
 "
 echo -e $TextLightGray && read -p "Press any key to view dir structure." && echo -e $ResetText
-tree myplaybooks/apache-basic-playbook
+cd ~/myplaybooks && ansible-galaxy init role-example
+tree ~/myplaybooks/role-example 2>/dev/null || ls -R -1 ~/myplaybooks/role-example
 
 echo -e $TextGreen "
    Fortunately, you don’t have to create all of these directories and files by hand.
@@ -111,30 +137,42 @@ echo -e $TextLightGray && read -p "<-- Press any key to continue -->" NULL && ec
 
 
 echo -e $TextBlue "
-==========================================================================" 
+=========================================================================="
 echo -e $TextGreen "
    Using Ansible Galaxy to initialize a new role
 
-   Ansible Galaxy is a free site for finding, downloading, and sharing roles.
-   It’s also pretty handy for creating them which is what we are about to do here.
+   Ansible Galaxy is a free site for finding, downloading, and sharing
+   roles.
+   It’s also pretty handy CLI tool for creating them which is what
+   we are about to do here.
 
    Step 1: Navigate to your apache-basic-playbook project
 "
 echo -e $TextRed "
-	# cd ~/apache-basic-playbook
+	# cd ~/myplaybooks/apache-basic-playbook
 "
+echo -e $TextLightGray && read -p "<-- Press any key to continue -->" NULL && echo -e $ResetText
+mkdir ~/myplaybooks/apache-basic-playbook && cd ~/myplaybooks/apache-basic-playbook
+
 echo -e $TextGreen "
 Step 2: Create a directory called roles and cd into it
 "
 echo -e $TextRed "
 	# mkdir roles
-	# cd roles"
+	# cd roles
+"
+echo -e $TextLightGray && read -p "<-- Press any key to continue -->" NULL && echo -e $ResetText
+mkdir ~/myplaybooks/apache-basic-playbook/roles && cd ~/myplaybooks/apache-basic-playbook/roles
+
 echo -e $TextGreen "
    Step 3: Use the ansible-galaxy command to initialize a new role called apache-simple
 "
 echo -e $TextRed "
 	# ansible-galaxy init apache-simple
 "
+echo -e $TextLightGray && read -p "<-- Press any key to continue -->" NULL && echo -e $ResetText
+ansible-galaxy init apache-simple
+
 echo -e $TextGreen "
    It is Ansible best practice to clean out role directories and files you won’t be using.
    For this role, we won’t be using anything from files, tests.
@@ -142,26 +180,23 @@ echo -e $TextGreen "
    Step 4: Remove the files and tests directories
 "
 echo -e $TextRed "
-	# cd ~/apache-basic-playbook/roles/apache-simple/
+	# cd ~/myplaybooks/apache-basic-playbook/roles/apache-simple/
 	# rm -rf files tests
 "
 echo -e $TextLightGray && read -p "<-- Press any key to continue -->" NULL && echo -e $ResetText
+cd ~/myplaybooks/apache-basic-playbook/roles/apache-simple/ && rm -rf files tests
 
 echo -e $TextBlue "
-==========================================================================" 
+=========================================================================="
 echo -e $TextGreen "
-   Breaking your site.yml playbook into the newly created apache-simple role
+   Breaking your apache-basic-playbook.yml file into the newly created
+	 apache-simple role.
 
    In this section, we will separate out the major parts of your playbook
    including vars:, tasks:, template:, and handlers:
 
-   Step 1: Make a backup copy of site.yml, then create a new site.yml
-"
-echo -e $TextRed "
-	# mv site.yml site.yml.bkup
-"
-echo -e $TextGreen "
-   Step 2: Add the play definition and the invocation of a single role
+   Step 1: Create a new site.yml, add the play definition and the
+   invocation of a single role
 
 	---
 	- hosts: web
@@ -172,16 +207,36 @@ echo -e $TextGreen "
 	    - apache-simple
 "
 echo -e $TextLightGray && read -p "<-- Press any key to continue -->" NULL && echo -e $ResetText
+cat << EOF > ~/myplaybooks/apache-basic-playbook/site.yml
+---
+- hosts: web
+  name: This is my role-based playbook
+  become: yes
+
+  roles:
+    - apache-simple
+EOF
 
 echo -e $TextGreen "
-   Step 3: Add some default variables to your role in roles/apache-simple/defaults/main.yml
+   Step 2: Add some default variables to your role in
+   roles/apache-simple/defaults/main.yml
 
 	---
 	# defaults file for apache-simple
 	apache_test_message: This is a test message
 	apache_max_keep_alive_requests: 115
+"
+echo -e $TextLightGray && read -p "<-- Press any key to continue -->" NULL && echo -e $ResetText
+cat << EOF > ~/myplaybooks/apache-basic-playbook/roles/apache-simple/defaults/main.yml
+---
+# defaults file for apache-simple
+apache_test_message: This is a test message
+apache_max_keep_alive_requests: 115
+EOF
 
-   Step 4: Add some role-specific variables to your role in roles/apache-simple/vars/main.yml
+echo -e $TextGreen "
+   Step 3: Add some role-specific variables to your role in
+   roles/apache-simple/vars/main.yml
 
 	---
 	# vars file for apache-simple
@@ -189,25 +244,36 @@ echo -e $TextGreen "
 	  - httpd
 	  - mod_wsgi
 
-   Note: we just put variables in two seperate places!
+   Note: we just put variables in two separate places!
 
    Variables can live in quite a few places. Just to name a few:
 	* vars directory
 	* defaults directory
 	* group_vars directory
 	* In the playbook under the vars: section
-	* In any file which can be specified on the command line using the --extra_vars option
+	* In any file which can be specified on the command line using the
+	  --extra_vars (or -e) option
 
-   Bottom line, you need to read up on variable precedence to understand both where to define
-   variables and which locations take precedence. In this exercise, we are using role defaults
-   to define a couple of variables and these are the most malleable. After that, we defined
-   some variables in /vars which have a higher precedence than defaults and can’t be overridden
-   as a default variable.
+   Bottom line, you need to read up on variable precedence to understand
+   both where to define variables and which locations take precedence.
+
+   In this exercise, we are using role defaults to define a couple of
+   variables and these are the most malleable. After that, we defined
+   some variables in /vars which have a higher precedence than defaults
+   and can’t be overridden as a default variable.
 "
 echo -e $TextLightGray && read -p "<-- Press any key to continue -->" NULL && echo -e $ResetText
+cat << EOF > ~/myplaybooks/apache-basic-playbook/roles/apache-simple/vars/main.yml
+---
+# vars file for apache-simple
+httpd_packages:
+  - httpd
+  - mod_wsgi
+EOF
 
 echo -e $TextGreen "
-   Step 5: Create your role handler in roles/apache-simple/handlers/main.yml
+   Step 4: Create your role handler in
+   roles/apache-simple/handlers/main.yml
 
 	---
 	# handlers file for apache-simple
@@ -218,17 +284,27 @@ echo -e $TextGreen "
 	    enabled: yes
 "
 echo -e $TextLightGray && read -p "<-- Press any key to continue -->" NULL && echo -e $ResetText
+cat << EOF > ~/myplaybooks/apache-basic-playbook/roles/apache-simple/handlers/main.yml
+---
+# handlers file for apache-simple
+- name: restart apache service
+  service:
+    name: httpd
+    state: restarted
+    enabled: yes
+EOF
 
 echo -e $TextGreen '
-   Step 6: Add tasks to your role in roles/apache-simple/tasks/main.yml
+   Step 5: Add tasks to your role in
+   roles/apache-simple/tasks/main.yml
 
 	---
 	# tasks file for apache-simple
 	- name: install httpd packages
 	  yum:
-	    name: "{{ item }}
+	    name: "{{ item }}"
 	    state: present
-	  with_items: "{{ httpd_packages }}"
+	  loop: "{{ httpd_packages }}"
 	  notify: restart apache service
 
 	- name: create site-enabled directory
@@ -254,9 +330,41 @@ echo -e $TextGreen '
 	    enabled: yes
 '
 echo -e $TextLightGray && read -p "<-- Press any key to continue -->" NULL && echo -e $ResetText
+cat << EOF > ~/myplaybooks/apache-basic-playbook/roles/apache-simple/tasks/main.yml
+---
+# tasks file for apache-simple
+- name: install httpd packages
+  yum:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ httpd_packages }}"
+  notify: restart apache service
+
+- name: create site-enabled directory
+  file:
+    name: /etc/httpd/conf/sites-enabled
+    state: directory
+
+- name: copy httpd.conf
+  template:
+    src: templates/httpd.conf.j2
+    dest: /etc/httpd/conf/httpd.conf
+  notify: restart apache service
+
+- name: copy index.html
+  template:
+    src: templates/index.html.j2
+    dest: /var/www/html/index.html
+
+- name: start httpd
+  service:
+    name: httpd
+    state: started
+    enabled: yes
+EOF
 
 echo -e $TextBlue "
-==========================================================================" 
+=========================================================================="
 echo -e $TextGreen "
    Running your new role-based playbook
 
@@ -267,17 +375,19 @@ echo -e $TextRed "
 	# ansible-playbook site.yml
 "
 echo -e $TextLightGray && read -p "Press any key to run our role-based playbook." NULL && echo -e $ResetText
-ansible-playbook myplaybooks/apache-basic-playbook/site.yml
+ansible-playbook ~/myplaybooks/apache-basic-playbook/site.yml
 
 echo -e $TextBlue "
-==========================================================================" 
+=========================================================================="
 echo -e $TextGreen "
    Before we go let's see the success of our playbook ...
 "
 echo -e $TextLightGray && read -p "<-- Press any key to open a browser -->" NULL && echo -e $ResetText
-firefox http://ansible1
+firefox http://ansible1 2>/dev/null || curl http://ansible1
 
 echo -e $TextGreen "
    That's it!  Thanks for playing!"
 echo -e $TextLightGray && read -p "Press any key to clean up the environment." NULL && echo -e $ResetText
-ansible-playbook myplaybooks/cleanup.yml
+ansible-playbook ~/myplaybooks/apache-basic-cleanup.yml
+rm -rf ~/myplaybooks
+rm ~/ansible.cfg
