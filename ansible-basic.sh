@@ -33,7 +33,7 @@ curl -O https://raw.githubusercontent.com/marktonneson/ansible-playbooks/master/
 # Create templates directory
 mdkir -p ~/myplaybooks/templates
 # Populate working directory with Templates
-echo << EOF > ~/myplaybooks/templates/index.html.j2
+cat << EOF > ~/myplaybooks/templates/index.html.j2
 <html>
 <head>
   <title>Ansible: Automation for Everyone</title>
@@ -48,13 +48,13 @@ curl -O https://raw.githubusercontent.com/ansible/lightbulb/master/examples/apac
 cd ~
 
 # Create a hosts file for Inventory
-echo << EOF > /root/hosts
+cat << EOF > ~/hosts
 [demo]
 ansible1
 ansible2
 EOF
 # Create a local ansible.cfg to use the inventory file
-echo << EOF > /root/ansible.cfg
+cat << EOF > ~/ansible.cfg
 inventory = /root/hosts
 EOF
 
