@@ -7,5 +7,6 @@ This demo is based on (a now older version) of Ansible LightBulb available [here
 * ansible-basic.sh = step-by-step demo of ansible core
 * ansible-advanced.sh = step-by-step demo of ansible core advanced features
 * ansible-nonroot.sh = example of running ansible w/o root
+* ansible-vault.sh = exmaple of using ansible-vault
 
 See DemoWalkThru for details on each of the above
